@@ -6,21 +6,22 @@ Based on the 2026 talk: **"RDS Maintenance: Strategies for Patching and Version 
 
 ---
 
-## What's Inside
+## Guide Sections
 
-This guide walks you through the full upgrade lifecycle:
+Start here → run `SELECT version();` across every environment, then work through the sections below.
 
-| Section | What It Covers |
-|---------|---------------|
-| **1 — Know Where You Stand** | Version discovery across all environments using SQL and AWS CLI |
-| **2 — Understand Your EOL Risk** | How to check community EOL, RDS standard support, and Extended Support dates |
-| **3 — Prerequisites Check** | Pre-upgrade validation: instance classes, invalid databases, unsupported data types, disk space, replication slots |
-| **4 — Check Your Extensions** | Extension audit and compatibility matrix (PostGIS, pgvector, pg_repack, pg_cron, and more) |
-| **5 — Plan Your Upgrade Strategy** | Minor version strategy, major version upgrade paths, and a full pre-upgrade checklist |
-| **6 — Minor Version Upgrades** | Automatic and manual minor version upgrade steps |
-| **7 — Major Version Upgrades** | Five upgrade approaches with CLI examples and trade-offs |
-| **8 — After the Upgrade** | Post-upgrade validation: statistics rebuild, index checks, extension updates, query performance monitoring |
-| **9 — Stay Ahead** | Maintenance tracking template and 6-month review cadence |
+| # | Section | What It Covers |
+|---|---------|---------------|
+| 1 | [Know Where You Stand](docs/01-know-where-you-stand.md) | Version discovery across all environments using SQL and AWS CLI |
+| 2 | [Understand Your EOL Risk](docs/02-eol-risk.md) | How to check community EOL, RDS standard support, and Extended Support dates |
+| 3 | [Prerequisites Check](docs/03-prerequisites.md) | Pre-upgrade validation: instance classes, invalid databases, unsupported data types, disk space, database objects, large objects |
+| 4 | [Check Your Extensions](docs/04-extensions.md) | Extension audit and compatibility matrix (PostGIS, pgvector, pg_repack, pg_cron, and more) |
+| 5 | [Plan Your Upgrade Strategy](docs/05-plan-upgrade-strategy.md) | OS updates, minor version strategy, major version upgrade paths, and pre-upgrade checklist |
+| 6 | [Minor Version Upgrades](docs/06-minor-version-upgrades.md) | Automatic and manual minor version upgrade steps |
+| 7 | [Major Version Upgrades](docs/07-major-version-upgrades.md) | Five upgrade approaches with CLI examples and trade-offs |
+| 8 | [After the Upgrade](docs/08-after-the-upgrade.md) | Post-upgrade validation: statistics rebuild, index checks, extension updates, query performance monitoring |
+| 9 | [Stay Ahead](docs/09-stay-ahead.md) | Maintenance tracking template and 6-month review cadence |
+| — | [Quick Reference](docs/10-quick-reference.md) | All key commands and AWS documentation links in one page |
 
 ## Upgrade Approaches Covered
 
@@ -82,17 +83,7 @@ SELECT version();
 ./scripts/bash/03-check-upgrade-targets.sh 14.9
 ```
 
-Then work through the [full guide](postgres-upgrade-guide.md).
-
-## Key AWS Documentation
-
-- [RDS PostgreSQL Release Calendar](https://docs.aws.amazon.com/AmazonRDS/latest/PostgreSQLReleaseNotes/postgresql-release-calendar.html)
-- [Aurora PostgreSQL Release Calendar](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/aurorapostgresql-release-calendar.html)
-- [RDS Major Version Upgrade Process](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.PostgreSQL.MajorVersion.Process.html)
-- [Aurora Major Version Upgrade Process](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_UpgradeDBInstance.PostgreSQL.MajorVersion.html)
-- [RDS Blue/Green Deployments](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments-overview.html)
-- [DMS Homogeneous Migration (PostgreSQL)](https://docs.aws.amazon.com/dms/latest/userguide/dm-migrating-data-postgresql.html)
-- [CloudWatch Database Insights](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Database-Insights.html)
+Then start with [Section 1 — Know Where You Stand](docs/01-know-where-you-stand.md).
 
 ## License
 
