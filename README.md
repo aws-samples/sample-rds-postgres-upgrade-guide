@@ -15,7 +15,7 @@ This guide walks you through the full upgrade lifecycle:
 | **1 — Know Where You Stand** | Version discovery across all environments using SQL and AWS CLI |
 | **2 — Understand Your EOL Risk** | How to check community EOL, RDS standard support, and Extended Support dates |
 | **3 — Prerequisites Check** | Pre-upgrade validation: instance classes, invalid databases, unsupported data types, disk space, replication slots |
-| **4 — Check Your Extensions** | Extension audit and compatibility matrix (PostGIS, pgvector, pg_repack, pg_cron, TimescaleDB, and more) |
+| **4 — Check Your Extensions** | Extension audit and compatibility matrix (PostGIS, pgvector, pg_repack, pg_cron, and more) |
 | **5 — Plan Your Upgrade Strategy** | Minor version strategy, major version upgrade paths, and a full pre-upgrade checklist |
 | **6 — Minor Version Upgrades** | Automatic and manual minor version upgrade steps |
 | **7 — Major Version Upgrades** | Five upgrade approaches with CLI examples and trade-offs |
@@ -81,7 +81,7 @@ SELECT version();
 ./scripts/bash/03-check-upgrade-targets.sh 14.9
 ```
 
-Then work through the [full guide](postgres-upgrade-guide-1.md).
+Then work through the [full guide](postgres-upgrade-guide.md).
 
 ## Key AWS Documentation
 

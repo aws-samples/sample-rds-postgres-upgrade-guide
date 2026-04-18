@@ -213,7 +213,6 @@ ORDER BY name;
 | **pg_repack** | Not compatible across major versions | Drop the extension before upgrading. Reinstall on the new version with `CREATE EXTENSION pg_repack;`. |
 | **pg_cron** | Parameter group settings | Verify `cron.database_name` parameter is correctly set in the new parameter group after upgrade. |
 | **pglogical** | Logical replication dependency | Check for conflicts with logical replication slots before upgrading. |
-| **TimescaleDB** | Strict version compatibility | Consult the Timescale compatibility matrix. May require a specific upgrade sequence separate from the engine upgrade. |
 
 > AWS does not automatically upgrade extensions when you upgrade the engine.
 > For most extensions, run `ALTER EXTENSION name UPDATE;` after the engine upgrade.
@@ -237,7 +236,41 @@ https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_UpgradeDBInsta
 
 ### Step 1 — OS Update Consideration
 
-For RDS and Aurora, AWS manages the underlying OS — no action required on your part. For self-managed PostgreSQL on EC2, plan OS updates separately from the database upgrade and never upgrade both at the same time in production.
+For RDS and Aurora, AWS manages the underlying operating system. Periodically, AWS provides OS updates for your DB instances that fall into two categories:
+
+- **Mandatory OS updates** — required updates with an apply date. If you do not apply them before the deadline, AWS will automatically apply them during your next maintenance window after the specified date. These are typically related to security and instance reliability.
+- **Optional OS updates** — available at any time with no deadline. AWS recommends applying these periodically to keep your RDS fleet up to date and maintain your security posture. RDS does not apply optional updates automatically.
+
+OS updates typically take about 10 minutes and do not change the DB engine version or instance class. For Multi-AZ deployments, AWS applies OS updates to the standby first, promotes it, then patches the old primary — reducing downtime to a brief failover.
+
+> **Tip:** To be notified when a new optional OS patch becomes available, subscribe to the `RDS-EVENT-0230` event in the security patching category.
+
+You can check for pending OS updates using the console (Maintenance & backups tab) or the CLI:
+
+```bash
+# Check for pending maintenance actions on your instance
+aws rds describe-pending-maintenance-actions \
+  --resource-identifier arn:aws:rds:<region>:<account-id>:db:<db-instance-id>
+```
+
+A mandatory update will include `AutoAppliedAfterDate` and `CurrentApplyDate` values in the response. An optional update will not include these fields.
+
+To apply a pending OS update immediately:
+
+```bash
+aws rds apply-pending-maintenance-action \
+  --resource-identifier arn:aws:rds:<region>:<account-id>:db:<db-instance-id> \
+  --apply-action system-update \
+  --opt-in-type immediate
+```
+
+> **Important:** Staying current on all optional and mandatory OS updates may be required to meet various compliance obligations. AWS recommends applying all updates routinely during your maintenance windows.
+
+For self-managed PostgreSQL on EC2, plan OS updates separately from the database upgrade and never upgrade both at the same time in production.
+
+👉 Upgrading a PostgreSQL DB instance: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.PostgreSQL.html
+👉 Maintaining a DB instance: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
+👉 Operating system updates: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html#OS_Updates
 
 ### Step 2 — Minor Version Strategy
 
@@ -581,7 +614,6 @@ WHERE installed_version IS NOT NULL
 | **pg_repack** | `DROP EXTENSION pg_repack;` then `CREATE EXTENSION pg_repack;` |
 | **pgvector** | `ALTER EXTENSION vector UPDATE;` — verify index behaviour post-update |
 | **pg_stat_statements** | `ALTER EXTENSION pg_stat_statements UPDATE;` then reset stats for a clean baseline |
-| **TimescaleDB** | Follow the Timescale version-specific upgrade guide — do not use `ALTER EXTENSION UPDATE` alone |
 
 👉 RDS extension upgrade guide:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.PostgreSQL.MajorVersion.Process.html
