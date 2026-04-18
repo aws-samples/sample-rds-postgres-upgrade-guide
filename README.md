@@ -2,7 +2,7 @@
 
 A practical, step-by-step guide for planning and executing PostgreSQL major version upgrades on Amazon RDS and Aurora PostgreSQL — from pre-flight checks through post-upgrade validation.
 
-Based on the 2026 talk: **"Is Your Database Keeping Up?"** presented at PostgreSQL Conference San Jose.
+Based on the 2026 talk: **"RDS Maintenance: Strategies for Patching and Version Upgrades"** presented at PostgreSQL Conference San Jose 2026.
 
 ---
 
@@ -36,35 +36,36 @@ This guide walks you through the full upgrade lifecycle:
 
 This repo includes ready-to-use scripts extracted from the guide. Clone the repo and run them directly.
 
-### SQL Scripts (`scripts/sql/`)
+### SQL Scripts ([`scripts/sql/`](scripts/sql/))
 
 | Script | Purpose |
 |--------|---------|
-| `01-check-version.sql` | Check PostgreSQL version |
-| `02-prereq-invalid-databases.sql` | Check for invalid databases, prepared transactions, replication slots |
-| `03-prereq-unsupported-datatypes.sql` | Find unsupported reg* data types |
-| `04-prereq-disk-space.sql` | Check database sizes and free space |
-| `05-check-extensions.sql` | List all installed extensions |
-| `06-post-upgrade-verify.sql` | Verify upgrade was successful |
-| `07-post-upgrade-analyze.sql` | Rebuild planner statistics |
-| `08-post-upgrade-invalid-indexes.sql` | Find and rebuild invalid indexes |
-| `09-post-upgrade-extensions.sql` | Check and update extensions |
-| `10-post-upgrade-query-perf.sql` | Monitor query performance via pg_stat_statements |
-| `11-quick-reference.sql` | All key queries in one file |
+| [`01-check-version.sql`](scripts/sql/01-check-version.sql) | Check PostgreSQL version |
+| [`02-prereq-invalid-databases.sql`](scripts/sql/02-prereq-invalid-databases.sql) | Check for invalid databases, prepared transactions, replication slots |
+| [`03-prereq-unsupported-datatypes.sql`](scripts/sql/03-prereq-unsupported-datatypes.sql) | Find unsupported reg* data types |
+| [`04-prereq-disk-space.sql`](scripts/sql/04-prereq-disk-space.sql) | Check database sizes and free space |
+| [`05-check-extensions.sql`](scripts/sql/05-check-extensions.sql) | List all installed extensions |
+| [`06-post-upgrade-verify.sql`](scripts/sql/06-post-upgrade-verify.sql) | Verify upgrade was successful |
+| [`07-post-upgrade-analyze.sql`](scripts/sql/07-post-upgrade-analyze.sql) | Rebuild planner statistics |
+| [`08-post-upgrade-invalid-indexes.sql`](scripts/sql/08-post-upgrade-invalid-indexes.sql) | Find and rebuild invalid indexes |
+| [`09-post-upgrade-extensions.sql`](scripts/sql/09-post-upgrade-extensions.sql) | Check and update extensions |
+| [`10-post-upgrade-query-perf.sql`](scripts/sql/10-post-upgrade-query-perf.sql) | Monitor query performance via pg_stat_statements |
+| [`11-quick-reference.sql`](scripts/sql/11-quick-reference.sql) | All key queries in one file |
+| [`12-check-database-objects.sql`](scripts/sql/12-check-database-objects.sql) | Count database objects to estimate upgrade duration |
 
-### Bash Scripts (`scripts/bash/`)
+### Bash Scripts ([`scripts/bash/`](scripts/bash/))
 
 | Script | Purpose |
 |--------|---------|
-| `01-check-rds-instances.sh` | List all RDS instances with versions |
-| `02-check-multi-env.sh` | Check versions across multiple environments |
-| `03-check-upgrade-targets.sh` | Show valid upgrade targets for a version |
-| `04-list-available-versions.sh` | List all available RDS PostgreSQL versions |
-| `05-enable-auto-minor-upgrade.sh` | Enable automatic minor version upgrades |
-| `06-manual-minor-upgrade.sh` | Apply a specific minor version |
-| `07-snapshot-restore-upgrade.sh` | Major upgrade via snapshot restore |
-| `08-inplace-upgrade.sh` | Major upgrade via in-place modify |
-| `09-blue-green-upgrade.sh` | Major upgrade via Blue/Green deployment |
+| [`01-check-rds-instances.sh`](scripts/bash/01-check-rds-instances.sh) | List all RDS instances with versions |
+| [`02-check-multi-env.sh`](scripts/bash/02-check-multi-env.sh) | Check versions across multiple environments |
+| [`03-check-upgrade-targets.sh`](scripts/bash/03-check-upgrade-targets.sh) | Show valid upgrade targets for a version |
+| [`04-list-available-versions.sh`](scripts/bash/04-list-available-versions.sh) | List all available RDS PostgreSQL versions |
+| [`05-enable-auto-minor-upgrade.sh`](scripts/bash/05-enable-auto-minor-upgrade.sh) | Enable automatic minor version upgrades |
+| [`06-manual-minor-upgrade.sh`](scripts/bash/06-manual-minor-upgrade.sh) | Apply a specific minor version |
+| [`07-snapshot-restore-upgrade.sh`](scripts/bash/07-snapshot-restore-upgrade.sh) | Major upgrade via snapshot restore |
+| [`08-inplace-upgrade.sh`](scripts/bash/08-inplace-upgrade.sh) | Major upgrade via in-place modify |
+| [`09-blue-green-upgrade.sh`](scripts/bash/09-blue-green-upgrade.sh) | Major upgrade via Blue/Green deployment |
 
 ## Quick Start
 

@@ -1,5 +1,5 @@
 # PostgreSQL Upgrade Guide
-Resources from the 2026 talk: **"Is Your Database Keeping Up?"**
+Resources from the 2026 talk: **"RDS Maintenance: Strategies for Patching and Version Upgrades"** presented at PostgreSQL Conference San Jose 2026.
 
 ## Start here → run this first
 
@@ -150,9 +150,9 @@ WHERE t.typname IN ('regproc','regprocedure','regoper','regoperator','regconfig'
 👉 Full list of pre-upgrade checks and common errors:
 https://repost.aws/knowledge-center/rds-postgresql-version-upgrade-issues
 
-### 4. Disk space
+### 4. Disk space and database size
 
-Major version upgrades require additional disk space during the process. Ensure you have at least as much free space as your current database size before starting.
+Knowing your database sizes helps estimate backup and snapshot time during the upgrade process. While AWS manages storage for RDS instances, the pre-upgrade snapshot duration is influenced by incremental changes and overall database size. For upgrade approaches that involve snapshot restore or DMS, database size directly affects migration time.
 
 📄 Script: [scripts/sql/04-prereq-disk-space.sql](scripts/sql/04-prereq-disk-space.sql)
 
@@ -166,7 +166,65 @@ ORDER BY pg_database_size(datname) DESC;
 SELECT pg_size_pretty(pg_database_size(current_database())) AS total_size;
 ```
 
-### 5. Release dates between source and target version
+### 5. Database object count
+
+Major version upgrade duration for the `pg_upgrade` step is primarily driven by the number of databases and database objects (tables, indexes, views, functions, partitions, etc.) — not the overall database size. A small database with thousands of partitions and indexes can take significantly longer to upgrade than a large database with fewer objects. Additionally, large objects (`pg_largeobject`) can significantly increase upgrade downtime — review and clean up orphaned large objects using the `vacuumlo` utility before upgrading. Audit your object count before scheduling your upgrade window.
+
+> **Important:** Run these queries in every database on the instance, not just your primary application database. The upgrade process uses `pg_upgrade` across all databases, and the precheck procedure checks all potential incompatible conditions across all databases in the instance. The total object count across all of them affects the overall upgrade duration.
+
+👉 Estimating upgrade downtime: https://repost.aws/knowledge-center/rds-postgresql-upgrade-downtime
+
+📄 Script: [scripts/sql/12-check-database-objects.sql](scripts/sql/12-check-database-objects.sql)
+
+```sql
+-- Total object count across all types
+SELECT count(*) AS total_objects FROM pg_class;
+
+-- Object count by type
+SELECT
+  CASE relkind
+    WHEN 'r' THEN 'table'
+    WHEN 'i' THEN 'index'
+    WHEN 'S' THEN 'sequence'
+    WHEN 'v' THEN 'view'
+    WHEN 'm' THEN 'materialized view'
+    WHEN 'c' THEN 'composite type'
+    WHEN 't' THEN 'TOAST table'
+    WHEN 'f' THEN 'foreign table'
+    WHEN 'p' THEN 'partitioned table'
+    WHEN 'I' THEN 'partitioned index'
+    ELSE relkind::text
+  END AS object_type,
+  count(*) AS count
+FROM pg_class
+GROUP BY relkind
+ORDER BY count DESC;
+
+-- Object count by schema (excluding system schemas)
+SELECT n.nspname AS schema, count(*) AS object_count
+FROM pg_class c
+JOIN pg_namespace n ON c.relnamespace = n.oid
+WHERE n.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+GROUP BY n.nspname
+ORDER BY object_count DESC;
+```
+
+> **Tip:** Run the object count query on a test instance and time a dry-run upgrade to estimate how long the production upgrade will take. This is more reliable than estimating based on database size alone.
+
+To check for large objects that may increase upgrade downtime:
+
+```sql
+-- Count large objects
+SELECT count(*) AS large_object_count FROM pg_largeobject_metadata;
+```
+
+If you have millions of large objects, consider cleaning up orphaned ones using the `vacuumlo` utility before upgrading. AWS recommends using an instance type with at least 32 GB of memory if your database contains 25 to 30 million large objects.
+
+👉 Managing large objects with the lo module: https://www.postgresql.org/docs/current/lo.html
+👉 vacuumlo utility: https://www.postgresql.org/docs/current/vacuumlo.html
+👉 RDS major version upgrade — handling large objects: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.PostgreSQL.MajorVersion.Process.html
+
+### 6. Release dates between source and target version
 
 Check that the target minor version is already available on RDS or Aurora before scheduling your upgrade. Not all community releases are immediately available on RDS.
 
@@ -183,7 +241,7 @@ aws rds describe-db-engine-versions \
 👉 Minor version release calendar:
 https://docs.aws.amazon.com/AmazonRDS/latest/PostgreSQLReleaseNotes/postgresql-release-calendar.html
 
-### 6. Learn about limitations and best practices for your chosen upgrade approach
+### 7. Learn about limitations and best practices for your chosen upgrade approach
 
 Each upgrade approach has its own constraints. Before finalising your upgrade strategy, read the documentation for the method you have chosen (see Section 7) and factor these into your plan — especially around logical replication slots, Multi-AZ behaviour, read replicas, parameter group compatibility, and extension handling.
 
@@ -266,10 +324,11 @@ aws rds apply-pending-maintenance-action \
 
 > **Important:** Staying current on all optional and mandatory OS updates may be required to meet various compliance obligations. AWS recommends applying all updates routinely during your maintenance windows.
 
-For self-managed PostgreSQL on EC2, plan OS updates separately from the database upgrade and never upgrade both at the same time in production.
 
 👉 Upgrading a PostgreSQL DB instance: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.PostgreSQL.html
+
 👉 Maintaining a DB instance: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html
+
 👉 Operating system updates: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html#OS_Updates
 
 ### Step 2 — Minor Version Strategy
