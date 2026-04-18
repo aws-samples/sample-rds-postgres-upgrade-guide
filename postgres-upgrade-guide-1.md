@@ -16,6 +16,8 @@ Then work your way through the sections below.
 
 ### Check version inside any PostgreSQL instance
 
+📄 Script: [scripts/sql/01-check-version.sql](scripts/sql/01-check-version.sql)
+
 ```sql
 -- Human-readable version
 SELECT version();
@@ -26,6 +28,8 @@ SELECT current_setting('server_version_num');
 
 ### Check all your RDS instances at once (AWS CLI)
 
+📄 Script: [scripts/bash/01-check-rds-instances.sh](scripts/bash/01-check-rds-instances.sh)
+
 ```bash
 aws rds describe-db-instances \
   --query 'DBInstances[*].[DBInstanceIdentifier,EngineVersion,DBInstanceStatus]' \
@@ -33,6 +37,8 @@ aws rds describe-db-instances \
 ```
 
 ### Check across multiple environments in one script
+
+📄 Script: [scripts/bash/02-check-multi-env.sh](scripts/bash/02-check-multi-env.sh)
 
 ```bash
 #!/bin/bash
@@ -75,13 +81,15 @@ Rather than maintaining a static table here that may become outdated, always ref
 
 ---
 
-## Section 2.5 — Prerequisites Check Before You Upgrade
+## Section 3 — Prerequisites Check Before You Upgrade
 
 Before planning your upgrade path, run through these prerequisite checks. Skipping these is the most common reason upgrades fail or roll back mid-process.
 
 ### 1. Unsupported DB instance classes for the target version
 
 Some older instance types are not supported on newer PostgreSQL major versions. Verify your instance class is compatible with your target version before starting.
+
+📄 Script: [scripts/bash/03-check-upgrade-targets.sh](scripts/bash/03-check-upgrade-targets.sh)
 
 ```bash
 # Check which versions you can upgrade to directly from your current version
@@ -98,6 +106,8 @@ aws rds describe-db-engine-versions \
 ### 2. Invalid databases
 
 RDS runs a precheck before any major version upgrade using `pg_upgrade`. Invalid databases, open prepared transactions, or active logical replication slots will cause the upgrade to fail.
+
+📄 Script: [scripts/sql/02-prereq-invalid-databases.sql](scripts/sql/02-prereq-invalid-databases.sql)
 
 ```sql
 -- Check for invalid databases (datistemplate should be 't' for template0 and template1)
@@ -123,6 +133,8 @@ SELECT pg_drop_replication_slot('slot_name');
 
 Certain data types used in older PostgreSQL versions are not supported in newer versions. The most common issues are the `unknown` data type (versions 9.x to 10+) and `reg*` data types.
 
+📄 Script: [scripts/sql/03-prereq-unsupported-datatypes.sql](scripts/sql/03-prereq-unsupported-datatypes.sql)
+
 ```sql
 -- Check for reg* data type usage (except regtype and regclass which are safe)
 SELECT n.nspname AS schema, c.relname AS table, a.attname AS column, t.typname AS type
@@ -142,6 +154,8 @@ https://repost.aws/knowledge-center/rds-postgresql-version-upgrade-issues
 
 Major version upgrades require additional disk space during the process. Ensure you have at least as much free space as your current database size before starting.
 
+📄 Script: [scripts/sql/04-prereq-disk-space.sql](scripts/sql/04-prereq-disk-space.sql)
+
 ```sql
 -- Check current database sizes
 SELECT datname, pg_size_pretty(pg_database_size(datname)) AS size
@@ -156,6 +170,8 @@ SELECT pg_size_pretty(pg_database_size(current_database())) AS total_size;
 
 Check that the target minor version is already available on RDS or Aurora before scheduling your upgrade. Not all community releases are immediately available on RDS.
 
+📄 Script: [scripts/bash/04-list-available-versions.sh](scripts/bash/04-list-available-versions.sh)
+
 ```bash
 # List all available PostgreSQL versions on RDS
 aws rds describe-db-engine-versions \
@@ -169,15 +185,17 @@ https://docs.aws.amazon.com/AmazonRDS/latest/PostgreSQLReleaseNotes/postgresql-r
 
 ### 6. Learn about limitations and best practices for your chosen upgrade approach
 
-Each upgrade approach has its own constraints. Before finalising your upgrade strategy, read the documentation for the method you have chosen (see Section 5) and factor these into your plan — especially around logical replication slots, Multi-AZ behaviour, read replicas, parameter group compatibility, and extension handling.
+Each upgrade approach has its own constraints. Before finalising your upgrade strategy, read the documentation for the method you have chosen (see Section 7) and factor these into your plan — especially around logical replication slots, Multi-AZ behaviour, read replicas, parameter group compatibility, and extension handling.
 
 ---
 
-## Section 3 — Check Your Extensions
+## Section 4 — Check Your Extensions
 
 Extensions are one of the most common causes of upgrade failures or post-upgrade issues. Always audit your extensions before upgrading.
 
 ### List all installed extensions
+
+📄 Script: [scripts/sql/05-check-extensions.sql](scripts/sql/05-check-extensions.sql)
 
 ```sql
 SELECT name, default_version, installed_version
@@ -215,7 +233,7 @@ https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_UpgradeDBInsta
 
 ---
 
-## Section 4 — Plan Your Upgrade Strategy
+## Section 5 — Plan Your Upgrade Strategy
 
 ### Step 1 — OS Update Consideration
 
@@ -237,6 +255,8 @@ RDS and Aurora support skipping major versions in some upgrade paths — sequent
 
 **Always verify the exact upgrade targets available for your specific version:**
 
+📄 Script: [scripts/bash/03-check-upgrade-targets.sh](scripts/bash/03-check-upgrade-targets.sh)
+
 ```bash
 # Check which versions you can upgrade to directly from your current version
 aws rds describe-db-engine-versions \
@@ -253,11 +273,11 @@ If your target version is not available as a direct upgrade, an intermediate hop
 ```
 [ ] Run SELECT version() across all environments — document current versions
 [ ] Check valid upgrade targets for your current version (CLI command above)
-[ ] Complete all Section 2.5 prerequisite checks
+[ ] Complete all Section 3 prerequisite checks
 [ ] Audit all installed extensions for compatibility with target version
 [ ] Decide on minor version upgrade strategy (automatic vs manual)
 [ ] Identify your major version upgrade path — verify direct jump is supported
-[ ] Choose your upgrade approach (see Section 5) and read its limitations
+[ ] Choose your upgrade approach (see Section 7) and read its limitations
 [ ] Take a manual RDS snapshot before any upgrade begins
 [ ] Restore the snapshot to a test instance
 [ ] Run your full upgrade process against the test instance first
@@ -273,13 +293,13 @@ If your target version is not available as a direct upgrade, an intermediate hop
 
 ---
 
-## Section 5 — The Upgrade
-
-### Minor Version Upgrades
+## Section 6 — Minor Version Upgrades
 
 Minor version upgrades (e.g., 16.6 → 16.7) include security patches and bug fixes. They carry low risk and should be applied regularly.
 
 **On RDS — Automatic (recommended for most teams):**
+
+📄 Script: [scripts/bash/05-enable-auto-minor-upgrade.sh](scripts/bash/05-enable-auto-minor-upgrade.sh)
 
 ```bash
 # Enable automatic minor version upgrade
@@ -293,6 +313,8 @@ AWS applies the patch during your scheduled maintenance window. If no maintenanc
 
 **On RDS — Manual:**
 
+📄 Script: [scripts/bash/06-manual-minor-upgrade.sh](scripts/bash/06-manual-minor-upgrade.sh)
+
 ```bash
 # Apply a specific minor version manually
 aws rds modify-db-instance \
@@ -305,7 +327,7 @@ aws rds modify-db-instance \
 
 ---
 
-### Major Version Upgrades
+## Section 7 — Major Version Upgrades
 
 Major version upgrades require more planning. Choose the approach that fits your downtime tolerance, team capability, and environment.
 
@@ -316,6 +338,8 @@ Major version upgrades require more planning. Choose the approach that fits your
 **Best for:** Teams that want a safe fallback with minimal tooling complexity.
 **Downtime:** Required — application must stop writes during upgrade.
 **Risk:** Low — original snapshot always available to restore.
+
+📄 Script: [scripts/bash/07-snapshot-restore-upgrade.sh](scripts/bash/07-snapshot-restore-upgrade.sh)
 
 ```bash
 # 1. Take a manual snapshot
@@ -341,6 +365,8 @@ aws rds restore-db-instance-from-db-snapshot \
 **Best for:** Simpler environments where maintenance window downtime is acceptable.
 **Downtime:** Required — instance unavailable during upgrade.
 **Risk:** Medium — rollback requires restoring a pre-upgrade snapshot.
+
+📄 Script: [scripts/bash/08-inplace-upgrade.sh](scripts/bash/08-inplace-upgrade.sh)
 
 ```bash
 # Always take a manual snapshot first
@@ -427,6 +453,8 @@ https://aws.amazon.com/blogs/database/aws-dms-homogeneous-data-migration-from-po
 
 Blue/Green deployments use **logical replication** for major version upgrades and **physical replication** for minor version upgrades. AWS manages the staging environment, replication, and switchover automatically.
 
+📄 Script: [scripts/bash/09-blue-green-upgrade.sh](scripts/bash/09-blue-green-upgrade.sh)
+
 ```bash
 # 1. Create a Blue/Green deployment targeting the new major version
 aws rds create-blue-green-deployment \
@@ -479,9 +507,11 @@ https://aws.amazon.com/blogs/database/new-fully-managed-blue-green-deployment-in
 
 ---
 
-## Section 6 — After the Upgrade
+## Section 8 — After the Upgrade
 
 ### 1. Verify the upgrade was successful
+
+📄 Script: [scripts/sql/06-post-upgrade-verify.sql](scripts/sql/06-post-upgrade-verify.sql)
 
 ```sql
 SELECT version();
@@ -492,6 +522,8 @@ SELECT current_setting('server_version_num');
 
 The query planner relies on statistics. After a major upgrade, rebuild them immediately to ensure optimal query plans. Without current statistics, the planner may choose inefficient execution paths.
 
+📄 Script: [scripts/sql/07-post-upgrade-analyze.sql](scripts/sql/07-post-upgrade-analyze.sql)
+
 ```sql
 -- Rebuild planner statistics for all tables
 ANALYZE VERBOSE;
@@ -501,6 +533,8 @@ ANALYZE VERBOSE your_schema.your_table_name;
 ```
 
 ### 3. Check for invalid indexes
+
+📄 Script: [scripts/sql/08-post-upgrade-invalid-indexes.sql](scripts/sql/08-post-upgrade-invalid-indexes.sql)
 
 ```sql
 -- Find invalid indexes
@@ -519,6 +553,8 @@ REINDEX TABLE your_table_name;
 ### 4. Check extensions and take required action
 
 Extensions are not automatically upgraded when you upgrade the engine. Audit and update them after every major version upgrade.
+
+📄 Script: [scripts/sql/09-post-upgrade-extensions.sql](scripts/sql/09-post-upgrade-extensions.sql)
 
 ```sql
 -- Check installed vs available extension versions
@@ -559,6 +595,8 @@ Check query performance in the days following the upgrade. The planner may produ
 
 **Option A — pg_stat_statements**
 
+📄 Script: [scripts/sql/10-post-upgrade-query-perf.sql](scripts/sql/10-post-upgrade-query-perf.sql)
+
 ```sql
 -- Reset to get a clean post-upgrade baseline
 SELECT pg_stat_statements_reset();
@@ -597,7 +635,7 @@ https://aws.amazon.com/blogs/database/amazon-cloudwatch-database-insights-applie
 
 ---
 
-## Section 7 — Stay Ahead
+## Section 9 — Stay Ahead
 
 Paste this into your team wiki or runbook after every upgrade:
 
@@ -618,6 +656,8 @@ Set a calendar reminder every 6 months to review the AWS release calendar and co
 ---
 
 ## Quick Reference Commands
+
+📄 Script: [scripts/sql/11-quick-reference.sql](scripts/sql/11-quick-reference.sql)
 
 ```sql
 -- Version check

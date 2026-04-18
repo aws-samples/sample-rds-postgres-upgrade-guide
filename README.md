@@ -14,12 +14,13 @@ This guide walks you through the full upgrade lifecycle:
 |---------|---------------|
 | **1 — Know Where You Stand** | Version discovery across all environments using SQL and AWS CLI |
 | **2 — Understand Your EOL Risk** | How to check community EOL, RDS standard support, and Extended Support dates |
-| **2.5 — Prerequisites Check** | Pre-upgrade validation: instance classes, invalid databases, unsupported data types, disk space, replication slots |
-| **3 — Check Your Extensions** | Extension audit and compatibility matrix (PostGIS, pgvector, pg_repack, pg_cron, TimescaleDB, and more) |
-| **4 — Plan Your Upgrade Strategy** | Minor version strategy, major version upgrade paths, and a full pre-upgrade checklist |
-| **5 — The Upgrade** | Five upgrade approaches with CLI examples and trade-offs |
-| **6 — After the Upgrade** | Post-upgrade validation: statistics rebuild, index checks, extension updates, query performance monitoring |
-| **7 — Stay Ahead** | Maintenance tracking template and 6-month review cadence |
+| **3 — Prerequisites Check** | Pre-upgrade validation: instance classes, invalid databases, unsupported data types, disk space, replication slots |
+| **4 — Check Your Extensions** | Extension audit and compatibility matrix (PostGIS, pgvector, pg_repack, pg_cron, TimescaleDB, and more) |
+| **5 — Plan Your Upgrade Strategy** | Minor version strategy, major version upgrade paths, and a full pre-upgrade checklist |
+| **6 — Minor Version Upgrades** | Automatic and manual minor version upgrade steps |
+| **7 — Major Version Upgrades** | Five upgrade approaches with CLI examples and trade-offs |
+| **8 — After the Upgrade** | Post-upgrade validation: statistics rebuild, index checks, extension updates, query performance monitoring |
+| **9 — Stay Ahead** | Maintenance tracking template and 6-month review cadence |
 
 ## Upgrade Approaches Covered
 
@@ -31,6 +32,40 @@ This guide walks you through the full upgrade lifecycle:
 | **AWS DMS Homogeneous Migration** | Near-zero | Medium | Cross-account, cross-region, or self-managed to RDS/Aurora |
 | **Blue/Green Deployment** | Minutes | Low | AWS-native near-zero downtime with built-in rollback |
 
+## Runnable Scripts
+
+This repo includes ready-to-use scripts extracted from the guide. Clone the repo and run them directly.
+
+### SQL Scripts (`scripts/sql/`)
+
+| Script | Purpose |
+|--------|---------|
+| `01-check-version.sql` | Check PostgreSQL version |
+| `02-prereq-invalid-databases.sql` | Check for invalid databases, prepared transactions, replication slots |
+| `03-prereq-unsupported-datatypes.sql` | Find unsupported reg* data types |
+| `04-prereq-disk-space.sql` | Check database sizes and free space |
+| `05-check-extensions.sql` | List all installed extensions |
+| `06-post-upgrade-verify.sql` | Verify upgrade was successful |
+| `07-post-upgrade-analyze.sql` | Rebuild planner statistics |
+| `08-post-upgrade-invalid-indexes.sql` | Find and rebuild invalid indexes |
+| `09-post-upgrade-extensions.sql` | Check and update extensions |
+| `10-post-upgrade-query-perf.sql` | Monitor query performance via pg_stat_statements |
+| `11-quick-reference.sql` | All key queries in one file |
+
+### Bash Scripts (`scripts/bash/`)
+
+| Script | Purpose |
+|--------|---------|
+| `01-check-rds-instances.sh` | List all RDS instances with versions |
+| `02-check-multi-env.sh` | Check versions across multiple environments |
+| `03-check-upgrade-targets.sh` | Show valid upgrade targets for a version |
+| `04-list-available-versions.sh` | List all available RDS PostgreSQL versions |
+| `05-enable-auto-minor-upgrade.sh` | Enable automatic minor version upgrades |
+| `06-manual-minor-upgrade.sh` | Apply a specific minor version |
+| `07-snapshot-restore-upgrade.sh` | Major upgrade via snapshot restore |
+| `08-inplace-upgrade.sh` | Major upgrade via in-place modify |
+| `09-blue-green-upgrade.sh` | Major upgrade via Blue/Green deployment |
+
 ## Quick Start
 
 ```sql
@@ -40,18 +75,10 @@ SELECT version();
 
 ```bash
 # Step 2: Check all your RDS instances
-aws rds describe-db-instances \
-  --query 'DBInstances[*].[DBInstanceIdentifier,EngineVersion,DBInstanceStatus]' \
-  --output table
-```
+./scripts/bash/01-check-rds-instances.sh
 
-```bash
 # Step 3: Check valid upgrade targets for your version
-aws rds describe-db-engine-versions \
-  --engine postgres \
-  --engine-version <your-current-version> \
-  --query 'DBEngineVersions[*].ValidUpgradeTarget[*].{Version:EngineVersion,MajorUpgrade:IsMajorVersionUpgrade}' \
-  --output table
+./scripts/bash/03-check-upgrade-targets.sh 14.9
 ```
 
 Then work through the [full guide](postgres-upgrade-guide-1.md).
