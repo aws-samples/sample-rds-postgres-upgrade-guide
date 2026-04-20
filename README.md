@@ -35,7 +35,9 @@ Start here → run `SELECT version();` across every environment, then work throu
 
 ## Runnable Scripts
 
-This repo includes ready-to-use scripts extracted from the guide. Clone the repo and run them directly.
+This repo includes scripts extracted from the guide. Clone the repo and review them — update placeholder values (instance names, versions, connection strings) for your environment before running.
+
+> **⚠️ Important:** Several scripts contain placeholder connection strings and instance identifiers. Always review each script and replace example values with your own before executing. Scripts that modify RDS instances include a `WARNING` comment at the top — read it before running.
 
 ### SQL Scripts ([`scripts/sql/`](scripts/sql/))
 

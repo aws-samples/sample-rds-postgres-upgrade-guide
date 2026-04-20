@@ -1,5 +1,6 @@
 #!/bin/bash
 # Section 7 — Approach B: In-Place Upgrade (RDS)
+# WARNING: This script performs an in-place major version upgrade on your RDS instance. Review and test in a non-production environment first.
 # Usage: ./08-inplace-upgrade.sh <db-instance-identifier> <target-version>
 # Example: ./08-inplace-upgrade.sh my-db 17.2
 

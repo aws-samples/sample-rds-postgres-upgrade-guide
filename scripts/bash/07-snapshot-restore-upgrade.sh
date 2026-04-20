@@ -1,5 +1,6 @@
 #!/bin/bash
 # Section 7 — Approach A: RDS Snapshot Restore Upgrade
+# WARNING: This script creates a snapshot and restores a new RDS instance. Review and test in a non-production environment first.
 # Usage: ./07-snapshot-restore-upgrade.sh <db-instance-identifier> <target-version>
 # Example: ./07-snapshot-restore-upgrade.sh my-db 17.2
 

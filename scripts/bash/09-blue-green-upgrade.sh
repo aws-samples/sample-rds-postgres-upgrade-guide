@@ -1,5 +1,6 @@
 #!/bin/bash
 # Section 7 — Approach E: RDS Blue/Green Deployment
+# WARNING: This script creates a Blue/Green deployment on your RDS instance. Review and test in a non-production environment first.
 # Usage: ./09-blue-green-upgrade.sh <deployment-name> <db-instance-identifier> <target-version> <param-group-name>
 # Example: ./09-blue-green-upgrade.sh my-pg-upgrade my-db 17.2 my-pg17-param-group
 
