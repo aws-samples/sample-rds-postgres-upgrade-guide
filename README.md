@@ -89,4 +89,4 @@ Then start with [Section 1 — Know Where You Stand](docs/01-know-where-you-stan
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the [MIT-0 License](LICENSE).
