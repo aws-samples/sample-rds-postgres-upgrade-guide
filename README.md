@@ -29,7 +29,7 @@ Start here → run `SELECT version();` across every environment, then work throu
 |----------|----------|------------|----------|
 | **Snapshot Restore** | Yes | Low | Isolated, risk-free testing environment. For production upgrades, requires downtime and a data gap strategy — snapshots are point-in-time and do not include writes after the snapshot |
 | **In-Place Upgrade** | Yes | Low | Simple to execute, but require downtime |
-| **Logical Replication** | Minutes | High | Native PostgreSQL, with flexible version compatibility. Can be used as fallback option |
+| **Logical Replication** | Minutes | High | Provides near zero downtime. Native PostgreSQL, with flexible version compatibility. Can be used as fallback option |
 | **AWS DMS Homogeneous Migration** | Near-zero | High | Cross-account, cross-region, or self-managed to RDS/Aurora with near-zero downtime |
 | **Blue/Green Deployment** | Minutes | Low | Managed feature with controlled switchover, near zero downtime |
 

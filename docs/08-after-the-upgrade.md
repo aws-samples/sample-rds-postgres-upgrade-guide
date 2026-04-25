@@ -17,6 +17,17 @@ SELECT current_setting('server_version_num');
 
 The query planner relies on statistics. After a major upgrade, rebuild them immediately to ensure optimal query plans. Without current statistics, the planner may choose inefficient execution paths.
 
+> **PostgreSQL 18 and later:** pg_upgrade now preserves optimizer statistics during the upgrade, so a full `ANALYZE` is no longer required. However, extended statistics (created with `CREATE STATISTICS`) are not preserved and must be rebuilt. Use the following command to collect only the missing statistics:
+>
+> ```bash
+> vacuumdb --all --analyze-only --missing-stats-only
+> ```
+>
+> For versions prior to PostgreSQL 18, run a full `ANALYZE` as shown below.
+>
+> 👉 PostgreSQL 18 release notes — pg_upgrade retains optimizer statistics:
+> https://www.postgresql.org/docs/release/18.0/
+
 📄 Script: [scripts/sql/07-post-upgrade-analyze.sql](../scripts/sql/07-post-upgrade-analyze.sql)
 
 ```sql
@@ -72,7 +83,7 @@ WHERE installed_version IS NOT NULL
 
 | Extension | Action required |
 |-----------|----------------|
-| **PostGIS** | Follow the full PostGIS upgrade sequence — may require additional topology and raster steps |
+| **PostGIS** | Follow the full PostGIS upgrade sequence: run `SELECT postGIS_extensions_upgrade();` after the engine upgrade. If upgrading from PostGIS 2 to PostGIS 3, run the command twice — the first extracts raster into a separate `postgis_raster` extension, the second completes the upgrade. Verify all dependent extensions (`postgis_topology`, `postgis_raster`, `postgis_tiger_geocoder`) are updated. |
 | **pg_repack** | `DROP EXTENSION pg_repack;` then `CREATE EXTENSION pg_repack;` |
 | **pgvector** | `ALTER EXTENSION vector UPDATE;` — verify index behaviour post-update |
 | **pg_stat_statements** | `ALTER EXTENSION pg_stat_statements UPDATE;` then reset stats for a clean baseline |
@@ -82,6 +93,12 @@ https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Po
 
 👉 Aurora extension upgrade guide:
 https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_UpgradeDBInstance.Upgrading.ExtensionUpgrades.html
+
+👉 Managing spatial data with PostGIS (includes upgrade steps):
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.PostgreSQL.CommonDBATasks.PostGIS.html
+
+👉 Troubleshoot PostGIS extension during RDS for PostgreSQL upgrade:
+https://aws.amazon.com/premiumsupport/knowledge-center/rds-postgresql-upgrade-postgis/
 
 ### 5. Monitor query performance
 

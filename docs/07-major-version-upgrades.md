@@ -165,7 +165,14 @@ https://aws.amazon.com/blogs/database/aws-dms-homogeneous-data-migration-from-po
 **Downtime:** Minutes only (switchover) — typically under one minute.
 **Risk:** Low for most workloads — review limitations below before committing.
 
-Blue/Green deployments use **logical replication** for major version upgrades and **physical replication** for minor version upgrades. AWS manages the staging environment, replication, and switchover automatically.
+Blue/Green deployments work differently depending on the engine:
+
+| Engine | Major Version Upgrade | Minor Version / Same Version |
+|--------|----------------------|------------------------------|
+| RDS for PostgreSQL | Logical replication | Physical replication |
+| Aurora PostgreSQL | Logical replication | Logical replication |
+
+In both cases, AWS manages the staging environment, replication, and switchover automatically.
 
 📄 Script: [scripts/bash/09-blue-green-upgrade.sh](../scripts/bash/09-blue-green-upgrade.sh)
 
