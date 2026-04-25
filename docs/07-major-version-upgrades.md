@@ -199,8 +199,33 @@ aws rds switchover-blue-green-deployment \
 - Validate the green environment fully before triggering switchover — run your test suite and check query performance
 - Set a realistic `--switchover-timeout` — if replication lag is not drained by the timeout, the switchover rolls back with no impact to production
 - Monitor replication lag before initiating — only switchover when lag is near zero
-- Use Amazon RDS Proxy or Aurora smart drivers to minimise connection disruption during switchover
+- Use Amazon RDS Proxy or Aurora smart drivers to minimise connection disruption during switchover (see references below)
 - Run post-upgrade steps (ANALYZE, extension updates, index validation) on the green environment *before* switchover where possible
+
+**Reducing connection disruption during switchover:**
+
+**RDS for PostgreSQL:**
+- Use Amazon RDS Proxy to eliminate DNS propagation delays — the proxy detects the switchover and automatically redirects connections to the Green environment with no application code changes required
+- Use AWS Advanced JDBC, Python, Node.js, Go, .NET, or ODBC Wrapper Drivers for fast failover detection and automatic connection rerouting
+
+👉 Using RDS Proxy with Blue/Green Deployments:
+https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-proxy-blue-green.html
+
+👉 AWS Advanced Drivers — features and failover plugin:
+https://aws.github.io/aws-advanced-drivers/
+
+**Aurora PostgreSQL:**
+- Use Amazon RDS Proxy (same benefits as RDS for PostgreSQL above)
+- Use AWS Advanced JDBC, Python, Node.js, Go, .NET, or ODBC Wrapper Drivers for fast failover detection and automatic connection rerouting
+
+👉 AWS Advanced Drivers — features and failover plugin:
+https://aws.github.io/aws-advanced-drivers/
+
+👉 AWS blog — Demystifying the AWS Advanced JDBC Wrapper plugins:
+https://aws.amazon.com/blogs/database/demystifying-the-aws-advanced-jdbc-wrapper-plugins/
+
+👉 AWS blog — Introducing the Advanced Python Wrapper Driver for Aurora:
+https://aws.amazon.com/blogs/database/introducing-the-advanced-python-wrapper-driver-for-amazon-aurora/
 
 **Key limitations for major version upgrades:**
 - Uses logical replication — tables without a primary key or replica identity may not replicate correctly; audit your schema beforehand
