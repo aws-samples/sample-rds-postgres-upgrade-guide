@@ -31,7 +31,7 @@ Start here → run `SELECT version();` across every environment, then work throu
 | **In-Place Upgrade** | Yes | Low | Simple to execute, but require downtime |
 | **Logical Replication** | Minutes | High | Provides near zero downtime. Native PostgreSQL, with flexible version compatibility. Can be used as fallback option |
 | **AWS DMS Homogeneous Migration** | Near-zero | High | Cross-account, cross-region, or self-managed to RDS/Aurora with near-zero downtime |
-| **Blue/Green Deployment** | Minutes | Low | Managed feature with controlled switchover, near zero downtime |
+| **Blue/Green Deployment** | Minutes | Medium | Managed feature with controlled switchover, near zero downtime |
 
 ## Runnable Scripts
 
