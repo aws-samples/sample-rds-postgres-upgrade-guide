@@ -85,6 +85,31 @@ High-level steps:
 👉 PostgreSQL logical replication documentation:
 https://www.postgresql.org/docs/current/logical-replication.html
 
+**Key limitations of logical replication:**
+- DDL and schema changes are not replicated — the initial schema must be copied manually (e.g., `pg_dump --schema-only`), and subsequent schema changes must be kept in sync by hand
+- Sequence values are not replicated — table data backed by sequences replicates, but the sequence itself retains its start value on the subscriber; sequences must be updated manually before cutover
+- Only tables (including partitioned tables) are supported — views, materialized views, and foreign tables cannot be replicated
+- Large objects are not replicated — data must be stored in normal tables instead
+- TRUNCATE on tables with foreign keys to tables outside the subscription will fail on the subscriber
+- Partitioned table replication originates from leaf partitions by default — partitions on the publisher must exist as valid targets on the subscriber
+- Using `REPLICA IDENTITY FULL` on tables with data types that lack a default B-tree or Hash operator class (e.g., `point`, `box`) will cause UPDATE and DELETE failures unless a primary key or replica identity is defined
+
+👉 PostgreSQL logical replication restrictions:
+https://www.postgresql.org/docs/current/logical-replication-restrictions.html
+
+**RDS:**
+
+👉 Performing logical replication for Amazon RDS for PostgreSQL:
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/PostgreSQL.Concepts.General.FeatureSupport.LogicalReplication.html
+
+👉 Using pglogical to synchronize data across instances:
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.PostgreSQL.CommonDBATasks.pglogical.html
+
+**Aurora:**
+
+👉 Overview of PostgreSQL logical replication with Aurora:
+https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Replication.Logical.html
+
 ---
 
 ### Approach D — AWS DMS Homogeneous Data Migration
@@ -114,6 +139,18 @@ Use the **Homogeneous Data Migration** method in DMS for PostgreSQL-to-PostgreSQ
 > DMS Homogeneous Data Migration before planning. Check the latest supported
 > source versions in the AWS DMS documentation as support expands over time.
 
+**Key limitations of DMS Homogeneous Data Migration for PostgreSQL:**
+- No built-in data validation tool — you must validate data integrity separately after migration
+- Views are migrated as tables to the target database
+- New tables created on the source during ongoing CDC replication are not captured automatically — restart the migration to include them
+- Cannot migrate from a higher PostgreSQL version to a lower version
+- CDC requires tables to have primary keys — tables without primary keys need table replica identity configured as a workaround, which generates extra WAL logs
+- Source database user requires superuser (self-managed) or `rds_superuser` + `rds_replication` roles (RDS) for CDC
+- Replication slot and publisher are not automatically cleaned up when migration stops, fails, or is deleted — you must manually drop them on the source
+
+👉 DMS Homogeneous Data Migration limitations:
+https://docs.aws.amazon.com/dms/latest/userguide/data-migrations.html
+
 👉 DMS Homogeneous Data Migration — PostgreSQL source:
 https://docs.aws.amazon.com/dms/latest/userguide/data-migrations.html
 
@@ -124,7 +161,7 @@ https://aws.amazon.com/blogs/database/aws-dms-homogeneous-data-migration-from-po
 
 ### Approach E — RDS Blue/Green Deployment
 
-**Best for:** AWS-native near-zero downtime upgrades with built-in validation, easy rollback, and minimal operational complexity.
+**Best for:** Managed feature with controlled switchover, near zero downtime.
 **Downtime:** Minutes only (switchover) — typically under one minute.
 **Risk:** Low for most workloads — review limitations below before committing.
 
