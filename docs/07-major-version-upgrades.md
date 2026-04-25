@@ -12,7 +12,7 @@ Before proceeding, ensure you have completed the [prerequisites check](03-prereq
 
 ### Approach A — RDS Snapshot Restore
 
-**Best for:** Teams that want a safe fallback with minimal tooling complexity.
+**Best for:** Isolated, risk-free testing environment. For production upgrades, requires a data gap strategy — snapshots are point-in-time and do not include writes after the snapshot.
 **Downtime:** Required — application must stop writes during upgrade.
 **Risk:** Low — original snapshot always available to restore.
 
@@ -91,7 +91,7 @@ https://www.postgresql.org/docs/current/logical-replication.html
 
 **Best for:** Cross-account, cross-region migrations, or moving from self-managed PostgreSQL to RDS/Aurora with near-zero downtime.
 **Downtime:** Near-zero when using Full Load + CDC.
-**Risk:** Requires DMS setup, monitoring, and validation throughout the migration.
+**Risk:** High — requires DMS setup knowledge, monitoring, and validation throughout the migration.
 
 Use the **Homogeneous Data Migration** method in DMS for PostgreSQL-to-PostgreSQL migrations. This uses native PostgreSQL tools (`pg_dump` and `pg_restore`) under the hood, is fully serverless, and migrates tables, indexes, functions, stored procedures, triggers, and other database objects.
 
